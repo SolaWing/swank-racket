@@ -44,6 +44,7 @@
           (write-to-connection 
             `(:return (:ok (:values ,(cadr data))) ,(caddr data))
             out))
+         ;; TODO: (:emacs-interrupt :repl-thread)
          ([#t (display "not yet supported")]))))
 
 (define protocol-version "2013-03-08")
@@ -70,7 +71,6 @@
   ;; but, in racket's namespace model, we cannot do that, since, if we 
   ;; have to load the file, we should also set it as default namespace for
   ;; the repl.
-  (displayln data)
   (let* ([data (schemify-truth-values data)]
          [cmd (cadr data)]
          ;; namespace should be changed when loading a module.
@@ -102,7 +102,8 @@
               (current-thread)
               (list 'return `(:return (:ok ("racket" "racket")) ,cont)))]
 
-           [(list 'swank:listener-eval code) 
+           [(list 'swank:listener-eval code)
+            #| (displayln `(swank:listener-eval ,code)) |#
             (let ([eval-thread (get-thread thread (current-thread))])
               (thread-send eval-thread (list 'eval code cont)))]
 
@@ -146,9 +147,10 @@
            [(list 'swank:autodoc command _ ...)
             (list 'return `(:return (:ok "([x])") ,cont))]
 
-           [_ (thread-send
-                (current-thread)
-                (list 'return `(:return (:ok nil) ,cont)))])))
+           [data
+             (displayln `('unsupported ,data))
+             (thread-send (current-thread)
+                          (list 'return `(:return (:ok nil) ,cont)))])))
 
 (define (write-to-connection data out)
   (displayln data)

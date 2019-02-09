@@ -1,5 +1,7 @@
+.*
 *.swp
 *.swo
+compiled/
 
 #### example files
 es*.rkt

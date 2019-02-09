@@ -17,6 +17,7 @@
          "util.rkt")
 
 (provide swank-evaluation)
+(define repl-path (expand-user-path "~/.vim/bin/swank-racket/repl.rkt"))
 
 (define (swank-evaluation parent-thread)
   ;; we don't use make-evaluator in racket/sandbox because we can assume
@@ -27,10 +28,10 @@
   (let ([new-ns (make-base-namespace)])
    (namespace-attach-module
      (namespace-anchor->empty-namespace repl-anchor)
-     (string->path "repl.rkt")
+     repl-path
      new-ns)
    (parameterize ([current-namespace new-ns])
-                 (namespace-require "repl.rkt")
+                 (namespace-require repl-path)
                  (continuously
                    (dispatch-eval parent-thread (thread-receive))))))
 
@@ -128,7 +129,7 @@
 
               ;; we have to require again repl.rkt in order to access
               ;; the * variables.
-              (namespace-require "repl.rkt")))]))
+              (namespace-require repl-path)))]))
 
 (define (try-eval stx out)
   ;; Wraps evaluation of `stx` in a try/except block and redirects the

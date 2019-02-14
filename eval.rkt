@@ -8,6 +8,7 @@
 
 #lang racket
 (require racket/base
+         racket/runtime-path
          racket/rerequire
          (only-in srfi/13 string-prefix-ci?)
          "complete.rkt"
@@ -17,7 +18,7 @@
          "util.rkt")
 
 (provide swank-evaluation)
-(define repl-path (expand-user-path "~/.vim/bin/swank-racket/repl.rkt"))
+(define-runtime-path repl-path "repl.rkt")
 
 (define (swank-evaluation parent-thread)
   ;; we don't use make-evaluator in racket/sandbox because we can assume
@@ -27,11 +28,10 @@
   ;; in which the REPL runs and the namespace of this module.
   (let ([new-ns (make-base-namespace)])
    (namespace-attach-module
-     (namespace-anchor->empty-namespace repl-anchor)
+     (namespace-anchor->namespace repl-anchor)
      repl-path
      new-ns)
    (parameterize ([current-namespace new-ns])
-                 (namespace-require repl-path)
                  (continuously
                    (dispatch-eval parent-thread (thread-receive))))))
 

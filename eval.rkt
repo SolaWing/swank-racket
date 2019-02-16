@@ -33,7 +33,8 @@
      new-ns)
    (parameterize ([current-namespace new-ns])
                  (continuously
-                   (dispatch-eval parent-thread (thread-receive))))))
+                   (with-handlers ([exn:break? (λ (exn) 'break)]) ; ignore user break in repl thread. eval capture and show it
+                                  (dispatch-eval parent-thread (thread-receive)))))))
 
 (define (dispatch-eval pthread cmd)
   (match cmd
@@ -135,7 +136,7 @@
   ;; Wraps evaluation of `stx` in a try/except block and redirects the
   ;; output to `out`. Returns the correct message to be sent to emacs.
   (with-handlers
-    ([exn:fail?
+    ([(λ (exn) #t)
       (lambda (exn) `(:abort ,(print-exception exn)))])
 
     (let ([result (parameterize ([current-output-port out])

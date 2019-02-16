@@ -24,18 +24,21 @@
    thr))
 
 (define (get-thread t parent)
-  (cond ((eq? t #t) 'fail)
-        ((eq? t ':repl-thread)
+  (cond [(eq? t #t) 'fail]
+        [(eq? t ':repl-thread)
          (if repl-thread
            repl-thread
-           (spawn-repl-thread parent)))))
+           (spawn-repl-thread parent))]
+        [else
+         (displayln (list "pass wrong thread, should be :repl-thread" t parent))
+         ]))
 
 (define (dispatch-event data out)
   ;; this way to handle events resembles a bit erlang's.
   (displayln data)
   (flush-output (current-output-port))
   (let ([action (car data)])
-   (cond ([eq? action ':emacs-rex] 
+   (cond ([eq? action ':emacs-rex]
           (handle-emacs-command data))
          ([eq? action 'return]
           (write-to-connection
@@ -44,7 +47,8 @@
           (write-to-connection 
             `(:return (:ok (:values ,(cadr data))) ,(caddr data))
             out))
-         ;; TODO: (:emacs-interrupt :repl-thread)
+         ([eq? action ':emacs-interrupt]
+          (break-thread (get-thread (cadr data) (current-thread))))
          ([#t (display "not yet supported")]))))
 
 (define protocol-version "2013-03-08")
